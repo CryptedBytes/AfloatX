@@ -32,6 +32,8 @@ NSMenuItem *windowOutlineItem;
 NSMenu *windowOutlineSubmenu;
 NSArray *afloatXItems;
 CIFilter* colorInvertFilter;
+NSMenuItem *lastColorItem;
+NSColor* colorWithHexColorString;
 
 @implementation AfloatX
 
@@ -122,11 +124,42 @@ CIFilter* colorInvertFilter;
     }
 }
 
+- (NSView *)themeFrameToModify {
+    return [[[NSWindow topWindow] contentView] superview];
+}
+
+- (CALayer *)themeFrameLayer {
+    NSView *themeFrame = [self themeFrameToModify];
+    themeFrame.wantsLayer = YES;
+    return themeFrame.layer;
+}
+
+- (void)toggleColor:(NSColor *)color isVisible:(bool)isVisible {
+    CALayer *layer = [self themeFrameLayer];
+    if(isVisible){
+        layer.borderWidth = 5;
+        layer.cornerRadius = 10.0f;
+        layer.borderColor = color.CGColor;
+    }
+    else {
+        layer.borderWidth = 0.0f;
+    }
+
+}
+
+
 - (void)toggleFloatMainWindow {
     if([self isMainWindowFloating]) {
+
         [NSWindow setTopWindowCGWindowLevel:kCGNormalWindowLevel];
+        [self toggleColor:NULL isVisible:false];
+        
     } else {
         [NSWindow setTopWindowCGWindowLevel:kCGFloatingWindowLevel];
+        NSColor *outlineColor = NSColor.systemPinkColor;
+        //used https://corecoding.com/utilities/rgb-or-hex-to-float.php for color conversion
+        NSColor *customOutlineColor = [NSColor colorWithRed:0.922 green:0.655 blue:0.949 alpha:1.0];
+        [self toggleColor:customOutlineColor isVisible:true];
     }
 }
 
