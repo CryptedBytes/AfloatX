@@ -137,7 +137,7 @@ NSColor* colorWithHexColorString;
 - (void)toggleColor:(NSColor *)color isVisible:(bool)isVisible {
     CALayer *layer = [self themeFrameLayer];
     if(isVisible){
-        layer.borderWidth = 5;
+        layer.borderWidth = 3;
         layer.cornerRadius = 10.0f;
         layer.borderColor = color.CGColor;
     }
@@ -205,8 +205,9 @@ NSColor* colorWithHexColorString;
     windowOutlineSubmenu = [NSMenu new];
     windowOutlineItem.submenu = windowOutlineSubmenu;
     
-    floatItem = [[NSMenuItem alloc] initWithTitle:@"Float Window" action:@selector(toggleFloatMainWindow) keyEquivalent:@""];
+    floatItem = [[NSMenuItem alloc] initWithTitle:@"Float Window" action:@selector(toggleFloatMainWindow) keyEquivalent:@"X"];
     [floatItem setTarget:plugin];
+
     
     dropItem = [[NSMenuItem alloc] initWithTitle:@"Drop Window" action:@selector(toggleDropMainWindow) keyEquivalent:@""];
     [dropItem setTarget:plugin];
@@ -241,7 +242,54 @@ NSColor* colorWithHexColorString;
         
     [AfloatXMenu addItem:[NSMenuItem separatorItem]];
     [AfloatXMenu addItem:AfloatXItem];
+    
+    
+    __block bool hotkeyModifiersActive = false;
+    
+    [NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskFlagsChanged
+                                                  handler:^(NSEvent* aEvent){
+        
+//        if( [aEvent modifierFlags] == (NSEventModifierFlagCommand | NSEventModifierFlagShift))
+        if( [aEvent modifierFlags] == 1179914)
+        {
+            NSLog( @"Command + shift was pressed " );
+           hotkeyModifiersActive = true;
+        }
+        else {
+            hotkeyModifiersActive = false;
+        }
+        return aEvent;
+        }];
+    
+    
+    NSEvent * (^monitorHandler)(NSEvent *);
+    monitorHandler = ^NSEvent * (NSEvent * theEvent){
+        NSLog(@"keycode: %hu", [theEvent keyCode]);
+        switch ([theEvent keyCode]) {
+            case 3:
+                NSLog(@"F key");
+                if(hotkeyModifiersActive){
+                    [plugin toggleFloatMainWindow];
+                }
+                break;
+            
+            default:
+                break;
+        }
+        // Return the event, a new event, or, to stop
+        // the event from being dispatched, nil
+       
+        return theEvent;
+    };
+
+    // Creates an object we do not own, but must keep track of so that
+    // it can be "removed" when we're done; therefore, put it in an ivar.
+    Ivar eventMon = (__bridge Ivar)([NSEvent addLocalMonitorForEventsMatchingMask:NSEventMaskKeyDown
+                                                                          handler:monitorHandler]);
+    
 }
+
+
 
 @end
 
